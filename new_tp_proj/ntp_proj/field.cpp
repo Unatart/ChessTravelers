@@ -47,6 +47,7 @@ std::vector<Coordinates> Field::winningPosition (void)
             if (_winning_matrix.isWinning(crd))
                 winning_position.push_back(crd);
         }
+    return winning_position;
 }
 
 bool Field::isWinning (void)
@@ -62,36 +63,43 @@ bool Field::isWinning (void)
     return true;
 }
 
-void Field::load (char* filename)
+void Field::load (std::string &filename)
 {
-    FILE *f = fopen(filename, "r");
+    std::ifstream file;
+    file.open(filename, std::ios::in);
 
     int width, height;
-    fscanf(f, "%d %d", &width, &height);
+    if (file.is_open()) {
+        file >> width;
+        file >> height;
+    } else {
+        throw common_exception(" in / Field::load / : can't open file.");
+    }
     _resize(width, height);
 
     char c;
-    for (int i = 0; i < 2; ++i)
-        fscanf(f, "%c", &c); // two \n before matrix
+    for (int i = 0; i < 2; ++i) {
+        file >> c; // two \n before matrix
+    }
 
     for (int i = 0; i < _height; ++i)
     {
         for (int j = 0; j < _width; ++j)
         {
-            fscanf(f, "%c", &c);
+            file >> c;
             _cell_matrix.set(Coordinates(i, j), c);
         }
-        fscanf(f, "%c", &c); // one \n after matrix row
+        file >> c; // one \n after matrix row
     }
 
     int i, j;
-    while (!feof(f))
+    while (!file.eof())
     {
-        fscanf(f, "%d %d", &i, &j);
+        file >> i >> j;
         _winning_matrix.set(Coordinates(i, j), true);
     }
 
-    fclose(f);
+    file.close();
 }
 
 void Field::fullprint (void)

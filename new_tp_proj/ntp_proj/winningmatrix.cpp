@@ -21,12 +21,16 @@ void WinningMatrix::allocate (int width, int height)
 {
     _width = width;
     _height = height;
-    _matrix = new bool*[height];
-    for (int i = 0; i < height; ++i)
-    {
-        _matrix[i] = new bool[width];
-        for (int j = 0; j < height; ++j)
-            _matrix[i][j] = false;
+    try {
+        _matrix = new bool*[height];
+        for (int i = 0; i < height; ++i)
+        {
+            _matrix[i] = new bool[width];
+            for (int j = 0; j < height; ++j)
+                _matrix[i][j] = false;
+        }
+    } catch(std::bad_alloc& exception) {
+        throw bad_alloc_exception(" in / WinningMatrix::allocate / : can't allocate memory.");
     }
 }
 

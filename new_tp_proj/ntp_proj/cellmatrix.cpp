@@ -21,12 +21,16 @@ void CellMatrix::allocate (int width, int height)
 {
     _width = width;
     _height = height;
-    _matrix = new Cell**[height];
-    for (int i = 0; i < height; ++i)
-    {
-        _matrix[i] = new Cell*[width];
-        for (int j = 0; j < height; ++j)
-            _matrix[i][j] = nullptr;
+    try {
+        _matrix = new Cell**[height];
+        for (int i = 0; i < height; ++i)
+        {
+            _matrix[i] = new Cell*[width];
+            for (int j = 0; j < height; ++j)
+                _matrix[i][j] = nullptr;
+        }
+    } catch(std::bad_alloc& exception) {
+        throw bad_alloc_exception(" in / CellMatrix::allocate / : can't allocate memory.");
     }
 }
 

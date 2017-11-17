@@ -2,8 +2,16 @@
 #define UTILS_H
 
 #include <stdio.h>
+#include <fstream>
+#include <streambuf>
 #include <iostream>
 #include <vector>
+#include <string>
+
+#include "exceptions.h"
+
+#include <boost/algorithm/string.hpp>
+#include <boost/format.hpp>
 
 // defines
 

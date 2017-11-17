@@ -2,10 +2,13 @@
 #include "cell.h"
 #include "playingfield.h"
 
+#include <string>
+
 int main (void)
 {
     PlayingField field = PlayingField();
-    field.load((char*)"field1.txt");
+    std::string filename = "field1.txt";
+    field.load(filename);
 
     while (!field.isWinning())
     {

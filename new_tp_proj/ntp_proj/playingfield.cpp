@@ -41,7 +41,7 @@ void PlayingField::pressCell (Coordinates crd)
     }
 }
 
-void PlayingField::load (char *filename)
+void PlayingField::load (std::string filename)
 {
     Field::load(filename);
     _deselect();
@@ -106,7 +106,11 @@ void PlayingField::_tryMove (Coordinates crd)
 void PlayingField::_move (Coordinates from, Coordinates to)
 {
     set(to, get(from));
-    Cell* temp = new EmptyCell;
+    try {
+        Cell* temp = new EmptyCell;
+    } catch(std::bad_alloc& exception) {
+        throw bad_alloc_exception(" in / PlayingField::_move / : can't allocate memory.");
+    }
     set(from, temp);
     delete temp;
 }

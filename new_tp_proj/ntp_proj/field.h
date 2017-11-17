@@ -23,7 +23,7 @@ public:
     Cell* get (Coordinates crd);
     void set (Coordinates crd, Cell* cell);
 
-    virtual void load (char* filename);
+    virtual void load (std::string &filename);
     virtual void fullprint (void);
     void smallprint (void);
 

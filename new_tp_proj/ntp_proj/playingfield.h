@@ -10,7 +10,7 @@ public :
     PlayingField (void);
     PlayingField (int width, int height);
 
-    virtual void load (char *filename);
+    virtual void load (std::string filename);
     virtual void fullprint (void);
 
     Coordinates selectedCell (void);
