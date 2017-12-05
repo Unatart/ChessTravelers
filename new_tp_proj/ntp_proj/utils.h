@@ -31,8 +31,8 @@
 #define FIGURE2COLOR            Qt::blue
 #define FIGURE3COLOR            Qt::yellow
 #define FIGURE4COLOR            Qt::red
-#define SELECTEDCOLOR           Qt::magenta
-#define AVAILABLEMOVESCOLOR     Qt::cyan
+#define WINNINGCOLOR            Qt::cyan
+#define AVAILABLEMOVESCOLOR     Qt::magenta
 
 class Coordinates;
 class Move;
