@@ -1,6 +1,9 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <Qt>
+#include <QColor>
+
 #include <stdio.h>
 #include <fstream>
 #include <streambuf>
@@ -22,6 +25,14 @@
 #define FIGURE3     '3'
 #define FIGURE4     '4'
 
+#define EMPTYCOLOR              Qt::white
+#define BLOCKCOLOR              Qt::black
+#define FIGURE1COLOR            Qt::green
+#define FIGURE2COLOR            Qt::blue
+#define FIGURE3COLOR            Qt::yellow
+#define FIGURE4COLOR            Qt::red
+#define SELECTEDCOLOR           Qt::magenta
+#define AVAILABLEMOVESCOLOR     Qt::cyan
 
 class Coordinates;
 class Move;

@@ -17,6 +17,11 @@ char Figure1::charRepresentation (void) const
     return FIGURE1;
 }
 
+QColor Figure1::colorRepresentation (void) const
+{
+    return FIGURE1COLOR;
+}
+
 std::vector<Coordinates> Figure1::availableMoves (Coordinates crd, CellMatrix &matrix) const
 {
     std::vector<Coordinates> available_moves = std::vector<Coordinates>();
@@ -44,6 +49,11 @@ Cell* Figure2::clone (void) const
 char Figure2::charRepresentation (void) const
 {
     return FIGURE2;
+}
+
+QColor Figure2::colorRepresentation (void) const
+{
+    return FIGURE2COLOR;
 }
 
 std::vector<Coordinates> Figure2::availableMoves (Coordinates crd, CellMatrix &matrix) const
@@ -75,6 +85,11 @@ char Figure3::charRepresentation (void) const
     return FIGURE3;
 }
 
+QColor Figure3::colorRepresentation (void) const
+{
+    return FIGURE3COLOR;
+}
+
 std::vector<Coordinates> Figure3::availableMoves (Coordinates crd, CellMatrix &matrix) const
 {
     std::vector<Coordinates> available_moves = std::vector<Coordinates>();
@@ -99,9 +114,9 @@ Cell* Figure4::clone (void) const
     return new Figure4;
 }
 
-char Figure4::charRepresentation (void) const
+QColor Figure4::colorRepresentation (void) const
 {
-    return FIGURE4;
+    return FIGURE4COLOR;
 }
 
 std::vector<Coordinates> Figure4::availableMoves (Coordinates crd, CellMatrix &matrix) const

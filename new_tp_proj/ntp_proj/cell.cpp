@@ -41,6 +41,11 @@ char EmptyCell::charRepresentation (void) const
     return EMPTY;
 }
 
+QColor EmptyCell::colorRepresentation (void) const
+{
+    return EMPTYCOLOR;
+}
+
 // Block - - - - - - - - - - - - - - - - - - - -
 
 Cell* Block::clone (void) const
@@ -56,6 +61,11 @@ bool Block::isBlock (void) const
 char Block::charRepresentation (void) const
 {
     return BLOCK;
+}
+
+QColor Block::colorRepresentation (void) const
+{
+    return BLOCKCOLOR;
 }
 
 Cell* CellFromChar (char chr)
