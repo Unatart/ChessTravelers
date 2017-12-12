@@ -1,0 +1,6 @@
+#ifndef INTERFACEERRORS_H
+#define INTERFACEERRORS_H
+
+const int INVALID_COORD = -1;
+
+#endif // INTERFACEERRORS_H

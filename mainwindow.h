@@ -1,18 +1,19 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QSound>
 #include <QMainWindow>
-#include <QGraphicsScene>
 #include <QtGui>
 #include <QtCore>
+#include <QMessageBox>
+
+#include <memory>
+
 #include "playingfield.h"
-
-
-typedef std::pair<int, int> xy;
-typedef std::vector<std::pair<int, int>> vect_xy;
-
-const int INVALID_COORD = -1;
+#include "configuratinwindow.h"
+#include "pointconverter.h"
+#include "interfaceerrors.h"
+#include "customcanvas.h"
+#include "customsound.h"
 
 enum TabPages {
     MENU = 0,
@@ -32,7 +33,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(QWidget *parent = 0,  const ConfiguratonWindow &conf = ConfiguratonWindow());
     ~MainWindow();
 
 //buttons
@@ -48,65 +49,48 @@ private slots:
     void on_BackOutAbout_clicked();
     void on_Start_clicked();
 
-
     void on_newGame_clicked();
-
     void on_backSelect_clicked();
 
 private:
     Ui::MainWindow *ui;
-    QGraphicsScene  *scene;
-    QPointF target;         //cursor point
-    PlayingField* field;
+    std::unique_ptr<CustomCanvas> canvas;
+    std::unique_ptr<CustomSound> sound;
+    std::unique_ptr<PlayingField> field;
 
     //size matrix scene
     int size_map_width;
     int size_map_height;
 
-    //size one cube
-    int size_cube_width;
-    int size_cube_height;
-
-    //size Canvas
-    int size_canvas_width;
-    int size_canvas_height;
-
     QString playerName;
-    QEventLoop *myLoop;
+    std::unique_ptr<QEventLoop> gameLoop;
+
+    //Paths
+    Path Maps;
 
     //draw
     void drawMap();
-    void drawCube(QPoint cube, QPen pen, QColor clr_brush, float percent_offset);
-    void drawCube(QPoint cube, int clr_pen, QColor clr_brush, float percent_offset);
-    void drawClickedCube(QPoint cube, char clr);
-    void drawPossibleMove(QPoint move_cube, char clr);
-    void drawPossibleMoves(std::vector<QPoint> move_cubes, char clr);
+    void drawGrid();
+    void drawMapCube();
+    void drawPossibleCube();
+    void drawFinishCube();
 
-    void loadData();
-
-    bool change;
-
+    void loadData(std::string map);
     void start();
     void runGame();
     void runMap();
+    bool IsRunMap();
 
+    void getCongratulationMesBox(std::string message, int score);
+    void getErrMesBox();
     void toPage(TabPages page);
 
     //mouse click
     void ProcessClickMouseLeft(QPoint point);
     void ProcessClickMouseRight();
-    void mousePressEvent(QMouseEvent *event);
-    bool isClickedScene;
-    int clrClickedCube;
+    void mousePressEvent(QMouseEvent *event); 
 
-    bool IsRunMap();
-
-    QColor handleColor(int num_clr);
-    QPoint getPosition(QPointF cursor);
-
-    //convertations points for connection with base game
-    QPoint ConvertToQPoint(Coordinates coord);
-    Coordinates ConvertToCoordinates(QPoint point);
+    QPoint getPosition(QPointF &cursor, int size_cube_width, int size_cube_height);
 };
 
 #endif // MAINWINDOW_H

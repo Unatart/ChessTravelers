@@ -1,333 +1,228 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "utils.h"
-#include "cell.h"
-#include "playingfield.h"
-#include "datagame.h"
-
-#include <string>
-
-enum COLOR_ID {
-    WHITE = '#',
-    BLACK = '0',
-    GREEN = 2,
-    BLUE  = '1',
-    RED   = 4
-};
-
-MainWindow::MainWindow(QWidget *parent) :
+MainWindow::MainWindow(QWidget *parent, const ConfiguratonWindow& conf):
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    canvas(new CustomCanvas()),
+    sound(new CustomSound(conf.Sounds)),
+    Maps(conf.Maps)
 {
     ui->setupUi(this);
-    ui->label_ver->setText("v0.2");
+    ui->label_ver->setText(QString::fromStdString(conf.version_program));
 
-    size_map_width = 1;
-    size_map_height = 1;
+    //gameLoop
+    gameLoop = std::move(std::unique_ptr<QEventLoop>(new QEventLoop(ui->graphicsView)));
 
-    size_canvas_width = 400;
-    size_canvas_height = 400;
-    scene = new QGraphicsScene();
-    myLoop = new QEventLoop (ui->graphicsView);
+    //init canvas
+    ui->graphicsView->setScene(canvas.get());
+    canvas->setCanvas(conf.width_canvas, conf.height_canvas);
 
-    ui->graphicsView->setScene(scene);
-    ui->graphicsView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->graphicsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    scene->setSceneRect(0, 0, size_canvas_width, size_canvas_height);
+    //init table result
+    ui->tableBestPlayers->setHorizontalHeaderLabels(QStringList() << "Player" << "Score");
 
-    change = true;
-
-    isClickedScene = false;
-    clrClickedCube = WHITE;
-    ui->graphicsView->setMouseTracking(true);
+    //sound
+    sound->playInMenu();
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
     delete ui;
 }
 
-QColor MainWindow::handleColor(int num_clr) {
-    QColor color;
-    switch(num_clr) {
-        case WHITE:
-            color = Qt::white;
-            break;
-        case BLUE:
-            color = Qt::blue;
-            break;
-        case RED:
-            color = Qt::red;
-            break;
-        case BLACK:
-            color = Qt::black;
-            break;
-        case GREEN:
-            color = Qt::green;
-            break;
+QPoint MainWindow::getPosition(QPointF &cursor, int size_cube_width, int size_cube_height) {
+    int i = (int) (cursor.x()) / size_cube_width;
+    int j = (int) (cursor.y()) / size_cube_height;
+    if (i >= 0 && i < size_map_width && j >= 0 && j < size_map_height) {
+        return QPoint(j, i);
     }
-    return color;
+    return QPoint(INVALID_COORD, INVALID_COORD);
 }
 
-QPoint MainWindow::getPosition(QPointF cursor) {
-    for (int i = 0; i < size_map_height; ++i) {
-        for (int j = 0; j < size_map_width; ++j) {
-            if (cursor.x() >= j * size_cube_width
-                    && cursor.y() >= i * size_cube_height
-                        && cursor.x() < j * size_cube_width + size_cube_width
-                            && cursor.y() < i * size_cube_height + size_cube_height)
-            {
-                QPoint i_j(i, j);
-                return i_j;
-            }
-        }
-    }
-    QPoint err(INVALID_COORD, INVALID_COORD);
-    return err;
+void MainWindow::drawGrid() {
+    canvas->drawGrid(size_map_width, size_map_height);
 }
 
-void MainWindow::drawCube(QPoint cube, QPen pen, QColor clr_brush, float percent_offset) {
-    if (cube.x() != INVALID_COORD) {
-        int x = cube.y(), y = cube.x();
-        int offset_width = (int) size_cube_width * percent_offset;
-        int offset_height = (int) size_cube_height * percent_offset;
-
-        QBrush brush(clr_brush);
-
-        scene->addRect(x * size_cube_width + offset_width,  y * size_cube_height + offset_height,
-                size_cube_width - 2 * offset_width,
-                    size_cube_height - 2 * offset_height,  pen, brush);
-    }
-}
-
-void MainWindow::drawCube(QPoint cube, int clr_pen, QColor clr_brush, float percent_offset) {
-    if (cube.x() != INVALID_COORD) {
-        int x = cube.y(), y = cube.x();
-        int offset_width = (int) size_cube_width * percent_offset;
-        int offset_height = (int) size_cube_height * percent_offset;
-
-        QPen pen(handleColor(clr_pen));
-        QBrush brush(clr_brush);
-
-        scene->addRect(x * size_cube_width + offset_width,  y * size_cube_height + offset_height,
-                size_cube_width - 2 * offset_width,
-                    size_cube_height - 2 * offset_height,  pen, brush);
-    }
-}
-
-void MainWindow::drawClickedCube(QPoint cube, char clr){
-    //clean this cube place
-    drawCube(cube, BLACK, WHITE, 0);
-    //small clicked cube and green pen
-    drawCube(cube, GREEN, clr, 3);
-}
-
-void MainWindow::drawPossibleMoves(std::vector<QPoint> move_cubes, char clr) {
-    //draw some possible cubs
-    for (size_t i = 0; i < move_cubes.size(); ++i) {
-        drawPossibleMove(move_cubes[i], clr);
-    }
-}
-
-void MainWindow::drawPossibleMove(QPoint move_cube, char clr) {
-    //possible move cube
-    drawCube(move_cube, clr, GREEN, 5);
-}
-
-QPoint MainWindow::ConvertToQPoint(Coordinates coord) {
-    QPoint point(coord.i, coord.j);
-    return point;
-}
-
-Coordinates MainWindow::ConvertToCoordinates(QPoint point) {
-    Coordinates coordinates(point.x(), point.y());
-    return coordinates;
-}
-
-void MainWindow::drawMap() {
-    //draw maps (lines)
-    //cols map
-    for (int col = 1; col < size_map_height; ++col){
-        scene->addLine(col * size_cube_height , 0, col * size_cube_height, size_canvas_height);
-    }
-    //rows map
-    for (int row = 0; row < size_map_width; ++row){
-        scene->addLine(0, row * size_cube_width, size_canvas_width, row * size_cube_width);
-    }
-
-    //draw player and other cubs
+void MainWindow::drawMapCube() {
     for (int i = 0; i < size_map_height; ++i) {
         for (int j = 0; j < size_map_width; ++j) {
             QPoint point_cube(i, j);
             QColor clr = field->get(ConvertToCoordinates(point_cube))->colorRepresentation();
-            drawCube(point_cube, BLACK, clr, 0);
+            canvas->drawCube(point_cube, QPen(Qt::black, 1), clr, 0);
         }
-    }
-    //draw cube finish mission
-    std::vector<Coordinates> win_points = field->winningPosition();// ConvertToQPoint(field->winningPosition());
-    for (size_t i = 0; i < win_points.size(); ++i) {
-        drawCube(ConvertToQPoint(win_points[i]), BLACK, Qt::cyan, 0.3);
-    }
-
-
-    //copy and convert coord into field
-    std::vector<Coordinates> possible_points = field->availableMoves();
-    std::cout << possible_points.size() << std::endl;
-    if (possible_points.size() != 0) {
-        QColor clr = field->get(field->selectedCell())->colorRepresentation();
-        for (size_t i = 0; i < possible_points.size(); ++i) {
-            drawCube(ConvertToQPoint(possible_points[i]), BLACK, clr, 0.6);
-        }
-        drawCube(ConvertToQPoint(field->selectedCell()), QPen(Qt::red, 3), clr, 0);
     }
 }
 
-void MainWindow::loadData() {
-    //there are methods don`t work (rewrite in FileManager)
-    field = new PlayingField();
-    std::string filename = "maps/1.txt";
+void MainWindow::drawPossibleCube() {
+    std::vector<Coordinates> possible_points = field->availableMoves();
+    if (possible_points.size() != 0) {
+        QColor clr = field->get(field->selectedCell())->colorRepresentation();
+        for (size_t i = 0; i < possible_points.size(); ++i) {
+            canvas->drawCube(ConvertToQPoint(possible_points[i]), QPen(Qt::black, 1), clr, 0.6);
+        }
+        canvas->drawCube(ConvertToQPoint(field->selectedCell()), QPen(Qt::red, 3), clr, 0);
+    }
+}
+
+void MainWindow::drawFinishCube()  {
+    std::vector<Coordinates> win_points = field->winningPosition();
+    for (size_t i = 0; i < win_points.size(); ++i) {
+        canvas->drawCube(ConvertToQPoint(win_points[i]), QPen(Qt::black, 1), Qt::cyan, 0.3);
+    }
+}
+
+void MainWindow::drawMap() {
+    //draw maps (lines)
+    drawGrid();
+    //draw player and other cubs
+    drawMapCube();
+    //draw cube finish mission
+    drawFinishCube();
+    //copy and convert coord into field
+    drawPossibleCube();
+}
+
+void MainWindow::loadData(std::string map) {
+    //LOADS AND SAVE FILES IN FILEMANAGER
+    field = std::move(std::unique_ptr<PlayingField>(new PlayingField()));
+    std::string filename = Maps + map;
     field->load(filename);
 
     size_map_width = field->width();
     size_map_height = field->height();
 
-    size_cube_width = size_canvas_width / size_map_width;
-    size_cube_height = size_canvas_height / size_map_height;
+    canvas->setSizeCube(canvas->getWidth() / size_map_width, canvas->getHeight() / size_map_height);
 }
 
 bool MainWindow::IsRunMap() {
-    if (field->isWinning()) {
-        return false;
+    return field->isWinning() ? false : true;
+}
+
+void MainWindow::runMap() {
+    drawMap();
+    canvas->setActive(true);
+    while (IsRunMap()) {
+        gameLoop.get()->exec();
+        drawMap();
     }
-    return true;
+    canvas->setActive(false);
 }
 
 void MainWindow::runGame() {
-    isClickedScene = true;
-    drawMap();
-    while (IsRunMap()) {
-        myLoop->exec();
-        drawMap();
+    //GETS AND SAVE MAP IN FILEMANAGER
+    std::vector<std::string> map = {"1.txt"}; //this example
+    for (size_t i = 0; i < map.size(); ++i) {
+        loadData(map[i]);
+        runMap();
+        getCongratulationMesBox(map[i], 0);
     }
 }
 
 void MainWindow::start(){
-    //#########for fun#############
-    QSound sound("sound/background.wav");
-    sound.setLoops(5);
-    sound.play();
-
-    //#############################
-    loadData();
+    sound->playInGame();
     runGame();
 }
 
 //handle event click mouse
 void MainWindow::ProcessClickMouseRight() {
     field->undo();
-    isClickedScene = true;
-    //drawMap();
 }
 
 void MainWindow::ProcessClickMouseLeft(QPoint point) {
     if (point.x() == INVALID_COORD){
-        isClickedScene = true;
         return;
     }
-
+    sound->SoundClick();
     field->pressCell(ConvertToCoordinates(point));
-    isClickedScene = true;
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *event) {
     if(event->button() == Qt::LeftButton) {
-        if (isClickedScene == true) {
-            QPointF scenePos = ui->graphicsView->mapToScene(ui->graphicsView->mapFromGlobal(event->globalPos()));
-            //QPointF scenePos = ui->graphicsView->mapFromGlobal(QCursor::pos());
-            std::cout << scenePos.x() << " " << scenePos.y() << std::endl;
-            QPoint i_j = getPosition(scenePos);
-
+        if (canvas->getActive() == true) {
+            QPointF cursor = ui->graphicsView->mapToScene(ui->graphicsView->mapFromGlobal(event->globalPos()));
+            QPoint i_j = getPosition(cursor, canvas->getWidthCube(), canvas->getHeightCube());
             ProcessClickMouseLeft(i_j);
-            //getPosition MouseClick in canvas (i, j) for debug
-            //ui->label_3->setText(QString::number(i_j.x()) + " " + QString::number(i_j.y()));
         }
-        myLoop->quit();
     }
     if(event->button() == Qt::RightButton) {
-        //isClickedScene = false;
-        ProcessClickMouseRight();
-        myLoop->quit();
+        if (canvas->getActive() == true) {
+            ProcessClickMouseRight();
+        }
     }
+    gameLoop.get()->quit();
 }
 
 void MainWindow::toPage(TabPages page) {
     ui->tabGame->setCurrentIndex(page);
 }
 
-void MainWindow::on_SelectGame_clicked()
-{
+void MainWindow::on_SelectGame_clicked() {
     toPage(SELECT);
 }
 
-void MainWindow::on_Exit_clicked()
-{
+void MainWindow::on_Exit_clicked() {
     exit(1);
 }
 
-void MainWindow::on_About_clicked()
-{
+void MainWindow::on_About_clicked() {
     toPage(ABOUT);
 }
 
-void MainWindow::on_Statistic_clicked()
-{
+void MainWindow::on_Statistic_clicked() {
     toPage(STATISTIC);
-    ui->tableBestPlayers->setRowCount(50);
-    ui->tableBestPlayers->setColumnCount(2);
-
-    int table_size = ui->tableBestPlayers->horizontalHeader()->size().rwidth();
-    int offset = ui->tableBestPlayers->verticalHeader()->size().rwidth();
-    ui->tableBestPlayers->horizontalHeader()->resizeSection(0, table_size * 2/3);
-    ui->tableBestPlayers->horizontalHeader()->resizeSection(1, table_size * 1/3 - offset);
-    ui->tableBestPlayers->setHorizontalHeaderLabels(QStringList() << "Player" << "Score");
-
-    //load out file && set all players
+    ui->tableBestPlayers->horizontalHeader()->resizeSection(0,
+            ui->tableBestPlayers->horizontalHeader()->size().rwidth() * 2/3),
+    ui->tableBestPlayers->horizontalHeader()->resizeSection(1,
+            ui->tableBestPlayers->horizontalHeader()->size().rwidth() * 1/3);
+    //LOADS RESULT PLAYERS FROM FILEMANAGER
 }
 
-void MainWindow::on_BackOutSelect_clicked()
-{
+void MainWindow::on_BackOutSelect_clicked() {
     toPage(MENU);
 }
 
-void MainWindow::on_BackOutStatistic_clicked()
-{
+void MainWindow::on_BackOutStatistic_clicked() {
     toPage(MENU);
 }
 
-void MainWindow::on_BackOutAbout_clicked()
-{
-    toPage(MENU);
+void MainWindow::on_BackOutAbout_clicked() {
     ui->TextAbout->setText("Информация об игре");
+    toPage(MENU);
 }
 
-void MainWindow::on_Start_clicked()
-{
+void MainWindow::getErrMesBox() {
+    QMessageBox messageBox;
+    messageBox.critical(0, "Error", "Enter your UserName!");
+    messageBox.setFixedSize(width() / 2, height() / 2);
+}
+
+void MainWindow::getCongratulationMesBox(std::string message, int score) {
+    QMessageBox messageBox;
+    messageBox.information(0, "Сongratulation!",
+                           "You complete mission"
+                           + QString::fromStdString(message)
+                           + "\n"
+                           + "Your score: "
+                           + QString::number(score)
+                           );
+    messageBox.setFixedSize(width() / 2, height() / 2);
+}
+
+void MainWindow::on_Start_clicked() {
     playerName = ui->NamelineEdit->text();
     if (playerName.size() == 0) {
+        getErrMesBox();
         return;
     }
     ui->playerName_label->setText(playerName);
     toPage(START);
     start();
+    toPage(MENU);
 }
 
-void MainWindow::on_newGame_clicked()
-{
+void MainWindow::on_newGame_clicked() {
     toPage(ENTER_NAME);
 }
 
-void MainWindow::on_backSelect_clicked()
-{
+void MainWindow::on_backSelect_clicked() {
     toPage(MENU);
 }

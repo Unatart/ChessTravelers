@@ -1,11 +1,15 @@
 #include "mainwindow.h"
 #include <QApplication>
+#include "configuratinwindow.h"
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
-    MainWindow w;
-    //w.setPalette(QPalette(QColor(Qt::red), QPalette::Background));
+
+    ConfiguratonWindow conf;
+    std::string filename =  "config.txt";
+    conf.load_conf(filename);
+
+    MainWindow w(0, conf);
     w.show();
 
     return a.exec();
