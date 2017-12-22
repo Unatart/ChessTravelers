@@ -1,48 +1,23 @@
 #ifndef FILE_H
 #define FILE_H
 
-#include "utils.h"
+#include <string>
+#include <iostream>
+#include "exceptions.h"
 
-class File {
+class file {
 public:
-    File() = default;
-    File(std::string init_full_path);
-    ~File() = default;
+    virtual void set_filename(std::string& init_filename) = 0;
+    virtual void set_extension(std::string& init_extension) = 0;
+    virtual void set_fullpath(std::string& init_fullpath) = 0;
 
-    File(const File &other);
-    File& operator =(const File &other);
+    virtual std::string get_filename() const = 0;
+    virtual std::string get_extensions() const = 0;
+    virtual std::string get_fullpath() const = 0;
 
-    void Set_file_name(std::string& init_file_name);
-    void Set_extension(std::string& init_extension);
-    void Set_full_path(std::string& init_full_path);
-
-    std::string Get_file_name() const;
-    std::string Get_extension() const;
-    std::string Get_full_path() const;
-
-    void Show_file_name() const;
-    void Show_extension() const;
-    void Show_full_path() const;
-
-    bool operator ==(const File& other);
-    bool operator !=(const File& other);
-
-    struct Finder{
-        Finder(std::string const& n) : name(n) {}
-        bool operator() (const File& elem) const {
-            return elem.file_name == name;
-        }
-    private:
-        std::string name;
-
-    };
-
-private:
-    std::string file_name;
-    std::string extension;
-
-    boost::filesystem::path full_path;
-
+    virtual void show_filename() const = 0;
+    virtual void show_extensions() const = 0;
+    virtual void show_fullpath() const = 0;
 };
 
 #endif // FILE_H
