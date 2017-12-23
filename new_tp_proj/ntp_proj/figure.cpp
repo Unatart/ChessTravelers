@@ -65,10 +65,7 @@ std::vector<Coordinates> Figure2::availableMoves (Coordinates crd, CellMatrix &m
             {
                 int len = matrix.checkDirection(crd, di, dj);
                 if (len > 1)
-                {
-                    Coordinates crd = Coordinates(crd.i + di * len, crd.j + dj * len);
-                    available_moves.push_back(crd);
-                }
+                    available_moves.push_back(Coordinates(crd.i + di * len, crd.j + dj * len));
             }
     return available_moves;
 }
@@ -128,10 +125,7 @@ std::vector<Coordinates> Figure4::availableMoves (Coordinates crd, CellMatrix &m
             {
                 int len = matrix.checkDirection(crd, di, dj);
                 if (len > 2)
-                {
-                    Coordinates crd = Coordinates(crd.i + di * len, crd.j + dj * len);
-                    available_moves.push_back(crd);
-                }
+                    available_moves.push_back(Coordinates(crd.i + di * len, crd.j + dj * len));
             }
     return available_moves;
 }
