@@ -1,2 +1,4 @@
 # ChessTravelers
-LogicGame. TechnoPark @mail.ru project 1 semester.
+
+LogicGame. TechnoPark @mail.ru project 
+- 1 semester.
